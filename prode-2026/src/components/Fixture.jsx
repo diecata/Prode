@@ -8,6 +8,7 @@ export default function Fixture() {
   const [predictions, setPredictions] = useState({});
   const [dirtyPredictions, setDirtyPredictions] = useState({});
   const [savingAll, setSavingAll] = useState(false);
+  const [showAllMatches, setShowAllMatches] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -118,27 +119,46 @@ export default function Fixture() {
 
   if (loading) return <div style={{ textAlign: 'center', marginTop: '2rem' }}>Cargando fixture...</div>;
 
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const displayedMatches = showAllMatches 
+    ? matches 
+    : matches.filter(match => new Date(match.date_utc).getTime() >= startOfToday.getTime());
+
   return (
     <div className="animate-fade-in">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <h2 style={{ fontSize: '1.8rem', margin: 0 }}>Fixture y Pronósticos</h2>
-        {Object.values(dirtyPredictions).some(v => v) && (
-          <button 
-            onClick={saveAllPredictions}
-            disabled={savingAll}
-            style={{ 
-              padding: '0.8rem 1.5rem', 
-              background: '#f59e0b', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '8px', 
-              cursor: 'pointer', 
-              fontWeight: 'bold', 
-              boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-            }}>
-            {savingAll ? 'Guardando...' : '💾 Guardar Todo'}
-          </button>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.95rem', color: 'var(--text-main)', background: 'rgba(0,0,0,0.2)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+            <input 
+              type="checkbox" 
+              checked={showAllMatches} 
+              onChange={(e) => setShowAllMatches(e.target.checked)} 
+              style={{ cursor: 'pointer' }}
+            />
+            Mostrar fechas anteriores
+          </label>
+
+          {Object.values(dirtyPredictions).some(v => v) && (
+            <button 
+              onClick={saveAllPredictions}
+              disabled={savingAll}
+              style={{ 
+                padding: '0.8rem 1.5rem', 
+                background: '#f59e0b', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '8px', 
+                cursor: 'pointer', 
+                fontWeight: 'bold', 
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+              }}>
+              {savingAll ? 'Guardando...' : '💾 Guardar Todo'}
+            </button>
+          )}
+        </div>
       </div>
       
       <div className="glass-panel" style={{ padding: '1rem 1.5rem', marginBottom: '2rem', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid var(--primary)' }}>
@@ -156,7 +176,7 @@ export default function Fixture() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1rem' }}>
-        {matches.map(match => {
+        {displayedMatches.map(match => {
           const isLocked = new Date(match.date_utc).getTime() - (30 * 60 * 1000) < new Date().getTime();
           const pred = predictions[match.id] || {};
           
